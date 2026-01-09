@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Movie Search Application
 
-## Getting Started
+A modern movie search application built using the latest version of **Next.js (App Router)** and **React**, consuming a public Movies API to provide searchable, filterable, and paginated movie results.
 
-First, run the development server:
+This project emphasizes **clean architecture, predictable state management, and defensive UI behavior**, focusing on real-world production concerns rather than visual polish.
+
+---
+
+## 🚀 Live Demo
+
+**Deployed App:**  
+[https://movie-app-silk-six-30.vercel.app/](https://movie-app-silk-six-30.vercel.app/)
+
+**GitHub Repository:**  
+[https://github.com/atlanteavila/movie-app](https://github.com/atlanteavila/movie-app)
+
+---
+
+## Project Overview
+
+This application allows users to:
+
+- Search for movies by title
+- Filter results by genre
+- Navigate through paginated results (next / previous)
+- View the total count of search results
+- See notable movie information including:
+  - Poster image
+  - Title
+  - Rating
+  - Summary (when available)
+
+The app uses the public Movies API provided for this exercise.
+
+---
+
+## Tech Stack
+
+- **Framework:** Next.js (latest, App Router)
+- **UI:** React + Tailwind CSS
+- **Data Fetching:** TanStack React Query
+- **Images:** `next/image` with defensive fallback handling
+- **API:** REST API (`please request if needed`)
+
+The application does not require users to grant any permissions.
+
+---
+
+## Architectural Highlights
+
+### Defensive Poster Rendering (`SafeMoviePoster`)
+
+Movie poster URLs from third-party APIs can often be unreliable (missing images, 404s, CDN issues).  
+To handle this gracefully, poster rendering is centralized in a `SafeMoviePoster` component that:
+
+- Displays a local placeholder image when posters fail to load
+- Prevents broken image icons and layout shifts
+- Works correctly with Next.js image optimization constraints
+
+This mirrors real-world frontend robustness expectations.
+
+---
+
+## State & Data Strategy
+
+- Server state is managed using **React Query**
+- Pagination, search, and filters are explicit and predictable
+- Cached placeholder data prevents UI flicker during page transitions
+- Query keys are scoped by page, search term, and genre to avoid stale data
+
+---
+
+## Minimum Requirements
+
+All minimum requirements defined in the exercise are met:
+
+- Search for movies
+- Paginated results
+- Next / Previous navigation
+- Genre filtering
+- Total result count
+- Display of notable movie information
+- No permissions required
+- Modern framework and tooling
+- No references to “This Dot” in the repository
+
+---
+
+## 🏆 What I’m Most Proud Of
+
+- Clean separation of concerns between data, UI, and error handling
+- Defensive handling of imperfect API data
+- Intentional scope control (building only what adds value)
+- A codebase that is readable, maintainable, and extensible
+
+---
+
+## ⏭️ Future Improvements
+
+Given more time, I would consider adding:
+
+- Server-side response normalization - main option
+- Skeleton loaders for images
+- Sorting options (rating, year)
+- URL-driven state for deep-linking
+- Accessibility enhancements
+- Basic test coverage for core components
+
+---
+
+## 📦 Running Locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+The app will be available at:
+
+```
+http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Notes
+- Third-party libraries are used intentionally and transparently
+- All core application logic was written specifically for this exercise
+- No existing projects were forked or copied
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
