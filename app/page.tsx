@@ -1,65 +1,152 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
+
+import { fetchMovies } from "@/app/lib/api/movies";
+import { fetchGenresWithMovies } from "@/app/lib/api/genres";
+import { MovieGrid } from "@/app/components/movie-grid";
+import { MovieDetailsModal } from "./components/movie-details-modal";
+
+export default function MoviesPage() {
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [genre, setGenre] = useState("");
+  const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null);
+
+  const limit = 12;
+
+  /* ---------------- Movies ---------------- */
+  const {
+    data: moviesResponse,
+    isLoading,
+    isPlaceholderData,
+  } = useQuery({
+    queryKey: ["movies", page, search, genre],
+    queryFn: () =>
+      fetchMovies({
+        page,
+        limit,
+        search: search || undefined,
+        genre: genre || undefined,
+      }),
+    placeholderData: (prev) => prev,
+  });
+
+  const movies = moviesResponse?.data ?? [];
+  const totalPages = moviesResponse?.totalPages ?? 1;
+
+  /* ---------------- Genres ---------------- */
+  const { data: genresResponse } = useQuery({
+    queryKey: ["genres-with-movies"],
+    queryFn: fetchGenresWithMovies,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  /**
+   * Extract unique, sorted genre titles
+   */
+  const genres = useMemo(() => {
+    if (!genresResponse?.data) return [];
+    return genresResponse.data
+      .map((g) => g.title)
+      .sort((a, b) => a.localeCompare(b));
+  }, [genresResponse]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="mx-auto max-w-7xl p-6">
+      <h1 className="text-2xl font-semibold text-white">Movie Search</h1>
+
+      {/* Filters */}
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        {/* Search */}
+        <input
+          placeholder="Search movies..."
+          className="rounded-md border px-3 py-2"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+        {/* Genre dropdown */}
+        <select
+          className="rounded-md border px-3 py-2"
+          value={genre}
+          onChange={(e) => {
+            setGenre(e.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">All genres</option>
+          {genres.map((g) => (
+            <option key={g} value={g}>
+              {g}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Results summary */}
+      <div className="mt-2 text-sm text-gray-300">
+        {(search || genre) && (
+          <>
+            Found{" "}
+            <strong>{totalPages > 1 ? `${limit}+` : movies.length}</strong>{" "}
+            movies
+            {search && (
+              <>
+                {" "}
+                for <em>{search}</em>
+              </>
+            )}
+            {genre && (
+              <>
+                {" "}
+                in <em>{genre}</em>
+              </>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Grid */}
+      {isLoading ? (
+        <div className="py-20 text-center text-gray-500">Loading…</div>
+      ) : (
+        <MovieGrid
+          movies={movies}
+          onMovieClick={(movie) => setSelectedMovieId(movie.id)}
+        />
+      )}
+
+      {/* Pagination */}
+      <div className="mt-8 flex items-center justify-between">
+        <button
+          disabled={page === 1}
+          onClick={() => setPage((p) => p - 1)}
+          className="rounded border px-4 py-2 disabled:opacity-50"
+        >
+          Previous
+        </button>
+
+        <span className="text-sm text-gray-200">
+          Page {page} of {totalPages}
+        </span>
+
+        <button
+          disabled={isPlaceholderData || page >= totalPages}
+          onClick={() => setPage((p) => p + 1)}
+          className="rounded border px-4 py-2 disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+      <MovieDetailsModal
+        movieId={selectedMovieId}
+        onClose={() => setSelectedMovieId(null)}
+      />
     </div>
   );
 }
